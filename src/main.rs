@@ -1,12 +1,10 @@
-use std::io::{self, BufRead};
-use serde_json::{self, Value};
+pub mod models;
 
+pub mod processing;
+use processing::run_pearl_processing;
+
+/// Main method for program, simply runs the `run_pearl_processing`
+/// method defined in the `processing` module.
 fn main() {
-    let stdin = io::stdin();
-
-    for line in stdin.lock().lines() {
-        let data: Value = serde_json::from_str(&line.unwrap()).unwrap();
-
-        println!("{}", data["1"]);
-    }
+    run_pearl_processing();
 }
