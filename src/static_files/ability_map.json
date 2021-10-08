@@ -1,0 +1,17 @@
+{
+    "General": {
+        "Red": 1,
+        "Green": 1,
+        "Blue": 1
+    },
+    "Vector": {
+        "Red": 1,
+        "Green": 5,
+        "Blue": 2
+    },
+    "Matrix": {
+        "Red": 1,
+        "Green": 2,
+        "Blue": 10
+    }
+}
