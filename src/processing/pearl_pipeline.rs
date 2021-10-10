@@ -1,10 +1,10 @@
-use std::io;
 use serde_json;
+use std::io;
 
+use super::utils::get_ability_map;
 use crate::models;
-use crate::models::state::Pearl;
-use models::state::State;
-use models::ability_map::{AbilityMap, get_ability_map};
+use models::ability_map::AbilityMap;
+use models::state::{Pearl, State};
 
 /// Runs the main loop for the pearl processing pipeline, which
 /// consists of repeatedly reading lines form `stdin`, converting
@@ -31,7 +31,7 @@ pub fn run_pearl_processing() {
 
             determine_action(data, &map);
             print_action();
-        },
+        }
         Err(e) => {
             print!("Error reading from stdin: {}", e);
         }

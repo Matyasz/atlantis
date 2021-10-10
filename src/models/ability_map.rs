@@ -1,19 +1,12 @@
-
-// use std::env::current_dir;
-use std::fs::{File, canonicalize};
-use std::io::BufReader;
-use std::ops::Index;
-use std::path::{Path, PathBuf};
-
 use serde::Deserialize;
-use serde_json;
+use std::ops::Index;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Color {
     pub red: i32,
     pub green: i32,
-    pub blue: i32
+    pub blue: i32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -58,43 +51,3 @@ impl Index<&'_ str> for Color {
 //         }
 //     }
 // }
-
-/// Reads the data from the JSON file containing information about how the
-/// different flavors of nautiloid are able to dissolve different layers
-/// of pearls.
-///
-/// # Arguments
-///
-/// * None
-///
-/// # Returns
-///
-/// * `AbilityMap` - A data structure detailing how quickly each flavor 
-///                  of nautiloid can process each color of pearl
-pub fn get_ability_map() -> AbilityMap{
-    let src_dir = canonicalize(PathBuf::from("./src")).unwrap();
-    let file = src_dir.join(Path::new("static_files/ability_map.json"));
-    
-    let file = match File::open(&file) {
-        Ok(f) => {
-            f
-        },
-        Err(e) => {
-            let p = file.to_str().unwrap();
-            panic!("File open error: \nFile: {}\nError: {}", p, e);
-        }
-    };
-
-    let reader = BufReader::new(&file);
-
-    let map: AbilityMap = match serde_json::from_reader(reader) {
-        Ok(m) => {
-            m
-        },
-        Err(e) => {
-            panic!("File buffer read error: {}", e)
-        }
-    };
-
-    return map;
-}
