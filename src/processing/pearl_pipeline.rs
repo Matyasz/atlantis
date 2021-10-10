@@ -1,7 +1,7 @@
 use serde_json;
 use std::io;
 
-use super::utils::get_ability_map;
+use super::utils::{build_neighbor_map, get_ability_map};
 use crate::models;
 use models::ability_map::AbilityMap;
 use models::state::{Pearl, State};
@@ -24,10 +24,10 @@ pub fn run_pearl_processing() {
 
     let map: AbilityMap = get_ability_map();
     // println!("{}", map["General"]["Red"]);
-
     match stdin.read_line(&mut buffer) {
         Ok(_n) => {
             let data: State = serde_json::from_str(&buffer).unwrap();
+            let neighbor_map = build_neighbor_map(&data.neighbor_map, &data.workers);
 
             determine_action(data, &map);
             print_action();

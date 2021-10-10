@@ -4,9 +4,9 @@ use std::ops::Index;
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Color {
-    pub red: i32,
-    pub green: i32,
-    pub blue: i32,
+    pub red: u32,
+    pub green: u32,
+    pub blue: u32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -30,8 +30,8 @@ impl Index<&'_ str> for AbilityMap {
 }
 
 impl Index<&'_ str> for Color {
-    type Output = i32;
-    fn index(&self, s: &str) -> &i32 {
+    type Output = u32;
+    fn index(&self, s: &str) -> &u32 {
         match s {
             "Red" => &self.red,
             "Green" => &self.green,
