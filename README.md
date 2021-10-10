@@ -16,3 +16,10 @@ Next navigate into the repo and build the project
 ```
 
 This will produce a binary, which will be located at `<repo root dir>/target/debug/atlantis` which can accept inputs from `stdin` and will output instructions to `stdout`.
+
+## Bonus documentation
+Thanks to the magic of Rust, you can also build a complete set of documentation as a website (complete with hyperlinks and including the documentation of all dependencies) by running
+```
+> cargo doc --open
+```
+When it is finished generating, it will automtically open in your browser. Later, you can navigate to `<repo root dir>/target/doc/atlantis` where you will find an `index.html` containing the landing page for the documentation.

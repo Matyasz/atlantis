@@ -4,7 +4,6 @@ use std::fs::{File, canonicalize};
 use std::io::BufReader;
 use std::ops::Index;
 use std::path::{Path, PathBuf};
-// use std::ops::IndexMut;
 
 use serde::Deserialize;
 use serde_json;
@@ -63,6 +62,15 @@ impl Index<&'_ str> for Color {
 /// Reads the data from the JSON file containing information about how the
 /// different flavors of nautiloid are able to dissolve different layers
 /// of pearls.
+///
+/// # Arguments
+///
+/// * None
+///
+/// # Returns
+///
+/// * `AbilityMap` - A data structure detailing how quickly each flavor 
+///                  of nautiloid can process each color of pearl
 pub fn get_ability_map() -> AbilityMap{
     let src_dir = canonicalize(PathBuf::from("./src")).unwrap();
     let file = src_dir.join(Path::new("static_files/ability_map.json"));
