@@ -1,36 +1,44 @@
+use super::super::utils::{
+    build_neighbor_graph, get_empty_neighbors, get_time_to_process, get_worker_ids,
+    get_worker_pearl_counts, make_nom, make_pass,
+};
 use crate::models::action::ActionType;
 use crate::models::state::{Layer, NeighborMap, Pearl, Worker, Workers};
 use crate::processing::utils::get_best_pearl_to_nom;
-use super::super::utils::{build_neighbor_graph, get_empty_neighbors, get_time_to_process, get_worker_ids, get_worker_pearl_counts, make_nom, make_pass};
 use crate::{models::ability_map::AbilityMap, processing::utils::get_ability_map};
 
 /// Returns a simple Pearl object for use in testing
-fn basic_pearl () -> Pearl {
-    let p: Pearl = Pearl{
+fn basic_pearl() -> Pearl {
+    let p: Pearl = Pearl {
         id: 12345,
-        layers: vec![
-            Layer{color: String::from("Green"), thickness: 12}]
-        };
+        layers: vec![Layer {
+            color: String::from("Green"),
+            thickness: 12,
+        }],
+    };
 
     return p;
 }
 
 /// Returns a simple Workers object for use in testing
-fn basic_workers () -> Workers {
+fn basic_workers() -> Workers {
     let w: Workers = vec![
-        Worker{
+        Worker {
             id: 0,
             desk: vec![],
-            flavor: String::from("Vector")
+            flavor: String::from("Vector"),
         },
-        Worker{
+        Worker {
             id: 1,
             desk: vec![
                 basic_pearl(),
-                Pearl{id: 67890, layers: vec![]}
+                Pearl {
+                    id: 67890,
+                    layers: vec![],
+                },
             ],
-            flavor: String::from("Matrix")
-        }
+            flavor: String::from("Matrix"),
+        },
     ];
 
     return w;
@@ -48,7 +56,7 @@ fn test_ability_map_values() {
 #[test]
 fn test_worker_ids() {
     let ids = get_worker_ids(&basic_workers());
-    
+
     assert_eq!(ids, [0, 1].to_vec());
 }
 
@@ -79,10 +87,7 @@ fn test_neighbor_graph() {
 #[test]
 #[should_panic]
 fn test_neighbor_graph_bad_neighbor_list() {
-    let nm: NeighborMap = vec![
-        vec![0, 1],
-        vec![1, 2]
-    ];
+    let nm: NeighborMap = vec![vec![0, 1], vec![1, 2]];
     let _ng = build_neighbor_graph(&nm, &basic_workers());
 }
 
@@ -92,7 +97,9 @@ fn test_make_pass() {
 
     match p {
         ActionType::Pass(_a) => {}
-        ActionType::Nom(_a) => {panic!();}
+        ActionType::Nom(_a) => {
+            panic!();
+        }
     }
 }
 
@@ -101,7 +108,9 @@ fn test_make_nom() {
     let n = make_nom(0, 1);
 
     match n {
-        ActionType::Pass(_a) => {panic!();}
+        ActionType::Pass(_a) => {
+            panic!();
+        }
         ActionType::Nom(_a) => {}
     }
 }
@@ -136,5 +145,5 @@ fn test_get_best_pearl_to_nom() {
     let map = get_ability_map();
 
     let bp = get_best_pearl_to_nom(&basic_workers()[1], &map);
-    assert_eq!(bp, 12345);
+    assert_eq!(bp, Some(12345));
 }

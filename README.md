@@ -16,8 +16,9 @@ Next navigate into the repo and build the project
 
 ```bash
 cd atlantis
-cargo build
+cargo build --release
 ```
+This will take about 30 seconds on an average laptop (8th gen Intel CORE i5 running Manjaro Linux). You can omit the `--release` flag to speed up compile time, but this will significantly slow down runtime.
 
 From this same directory, you can run the tests with 
 
@@ -25,7 +26,7 @@ From this same directory, you can run the tests with
 cargo test
 ```
 
-This will produce a binary, which will be located at `<repo root dir>/target/debug/atlantis` which can accept inputs from `stdin` and will output instructions to `stdout`.
+This will produce a binary, which will be located at `<repo root dir>/target/release/atlantis` (replace `release` with `debug` if you omitted the `--release flag` earlier) which can accept inputs from `stdin` and will output instructions to `stdout`.
 
 ## Optimization Strategy
 
@@ -36,6 +37,7 @@ I have implemented a very basic strategy for the pearl processing pipeline, base
     - The neighbor can process the pearl *as fast as* the worker currently in possession of it AND the worker with the pearl has more than one pearl so that after passing they can both work to process pearls.
 3. If a nautiloid also does not have a viable neighbor to pass a pearl to, then they will nom one of their pearls. In doing so, they will prioritize passing the pearl which they can process fastest.
 
+Using this method, the score from an `average-run` seems to hover between 9.5 and 11.
 
 ### Advantages
 

@@ -11,9 +11,9 @@ pub type NeighborMap = Vec<Vec<u32>>;
 pub type NeighborGraph = HashMap<u32, Vec<u32>>;
 
 #[derive(Debug)]
-pub struct WorkerPearlIDs{
+pub struct WorkerPearlIDs {
     pub worker_id: u32,
-    pub pearl_id: u32
+    pub pearl_id: u32,
 }
 
 #[derive(Deserialize, Clone)]

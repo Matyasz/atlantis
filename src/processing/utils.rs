@@ -2,10 +2,10 @@ use crate::models;
 use crate::models::action::ActionType;
 use crate::models::state::{NeighborGraph, Pearl, State, Worker, WorkerPearlIDs};
 use models::ability_map::AbilityMap;
+use models::action::{Nom, Pass};
 use models::state::{NeighborMap, Workers};
 use serde_json;
 use std::collections::HashMap;
-use models::action::{Nom, Pass};
 
 /// Reads the data from the JSON file containing information about how the
 /// different flavors of nautiloid are able to dissolve different layers
@@ -119,11 +119,12 @@ pub fn build_neighbor_graph(neighbors: &NeighborMap, workers: &Workers) -> Neigh
         let mut nb_list: Vec<u32> = Vec::new();
 
         for pair in neighbors {
-            // check to make sure the 
+            // check to make sure the
             for ind in [0, 1] {
                 if !worker_ids.contains(&pair[ind]) {
                     panic!(
-                        "Neighbor Graph Error: {} is not a valid worker ID", &pair[ind]
+                        "Neighbor Graph Error: {} is not a valid worker ID",
+                        &pair[ind]
                     );
                 }
             }
@@ -153,13 +154,11 @@ pub fn build_neighbor_graph(neighbors: &NeighborMap, workers: &Workers) -> Neigh
 ///
 /// * `ActionType::Pass` - Ano object describing the passing of a pearl
 pub fn make_pass(from_id: u32, pearl_id: u32, to_id: u32) -> ActionType {
-    return ActionType::Pass(
-        Pass{
-            from_id: from_id,
-            pearl_id: pearl_id,
-            to_id: to_id
-        }
-    );
+    return ActionType::Pass(Pass {
+        from_id: from_id,
+        pearl_id: pearl_id,
+        to_id: to_id,
+    });
 }
 /// Takes information about a worker nomming a pearl and constructs an
 /// ActionType object of the Nom variant.
@@ -173,12 +172,10 @@ pub fn make_pass(from_id: u32, pearl_id: u32, to_id: u32) -> ActionType {
 ///
 /// * `ActionType::Nom` - Ano object describing the nomming of a pearl
 pub fn make_nom(nautiloid_id: u32, pearl_id: u32) -> ActionType {
-    return ActionType::Nom(
-        Nom{
-            nautiloid_id: nautiloid_id,
-            pearl_id: pearl_id
-        }
-    );
+    return ActionType::Nom(Nom {
+        nautiloid_id: nautiloid_id,
+        pearl_id: pearl_id,
+    });
 }
 
 /// Determines how long it will take a given nautiloid to process a given pearl,
@@ -198,9 +195,9 @@ pub fn get_time_to_process(pearl: &Pearl, worker: &Worker, ability_map: &Ability
     let mut total_time: u32 = 0;
 
     for layer in &pearl.layers {
-        let layer_time = (
-            (layer.thickness as f32) / (ability_map[&worker.flavor][&layer.color] as f32)
-        ).ceil() as u32;
+        let layer_time = ((layer.thickness as f32)
+            / (ability_map[&worker.flavor][&layer.color] as f32))
+            .ceil() as u32;
 
         total_time += layer_time;
     }
@@ -218,11 +215,11 @@ pub fn get_time_to_process(pearl: &Pearl, worker: &Worker, ability_map: &Ability
 ///
 /// # Returns
 ///
-/// * `Vec<u32>` - A vector of the IDs of which neighbors have an empty desk 
+/// * `Vec<u32>` - A vector of the IDs of which neighbors have an empty desk
 pub fn get_empty_neighbors(
     worker: &Worker,
     pearl_counts: &HashMap<u32, u32>,
-    neighbor_graph: &NeighborGraph
+    neighbor_graph: &NeighborGraph,
 ) -> Vec<u32> {
     let mut empty_nbrs = neighbor_graph.get(&worker.id).unwrap().clone();
     empty_nbrs.retain(|&i| pearl_counts[&i] == 0);
@@ -253,7 +250,7 @@ pub fn get_best_neighbor(
     worker: &Worker,
     pearl_counts: &HashMap<u32, u32>,
     ability_map: &AbilityMap,
-    neighbor_graph: &NeighborGraph
+    neighbor_graph: &NeighborGraph,
 ) -> Option<WorkerPearlIDs> {
     let empty_neighbors = get_empty_neighbors(worker, pearl_counts, neighbor_graph);
     let mut best_pair: Option<WorkerPearlIDs> = None;
@@ -261,7 +258,7 @@ pub fn get_best_neighbor(
     for e_nbr_id in &empty_neighbors {
         for p in &worker.desk {
             let best_time = get_time_to_process(p, worker, ability_map);
-            
+
             let mut nbr = state.workers.clone();
             nbr.retain(|w| &w.id == e_nbr_id);
 
@@ -270,7 +267,10 @@ pub fn get_best_neighbor(
             // Only pass to a neighbor if they can actually process it better, OR if
             // the worker has extra pearls to work on.
             if (time < best_time) || (time == best_time && worker.desk.len() > 1) {
-                best_pair = Some(WorkerPearlIDs{worker_id: *e_nbr_id, pearl_id: p.id});
+                best_pair = Some(WorkerPearlIDs {
+                    worker_id: *e_nbr_id,
+                    pearl_id: p.id,
+                });
             }
         }
     }
@@ -290,13 +290,13 @@ pub fn get_best_neighbor(
 ///
 /// * `u32` - The ID of the optimal pearl for the worker to nom
 ///
-pub fn get_best_pearl_to_nom(worker: &Worker, ability_map: &AbilityMap) -> u32 {
+pub fn get_best_pearl_to_nom(worker: &Worker, ability_map: &AbilityMap) -> Option<u32> {
     // Remove any finished pearls first
     let mut unfinished_pearls = worker.desk.clone();
     unfinished_pearls.retain(|p| p.layers.len() != 0);
 
     let mut best_time: Option<u32> = None;
-    let mut best_pearl_id = unfinished_pearls[0].id;
+    let mut best_pearl_id: Option<u32> = None;
 
     for pearl in &unfinished_pearls {
         let time = get_time_to_process(pearl, worker, ability_map);
@@ -304,12 +304,12 @@ pub fn get_best_pearl_to_nom(worker: &Worker, ability_map: &AbilityMap) -> u32 {
         match best_time {
             Some(bt) => {
                 if time < bt {
-                    best_pearl_id = pearl.id;
-                    best_time = Some(bt);
+                    best_pearl_id = Some(pearl.id);
+                    best_time = Some(time);
                 }
             }
             None => {
-                best_pearl_id = pearl.id;
+                best_pearl_id = Some(pearl.id);
                 best_time = Some(time);
             }
         }
