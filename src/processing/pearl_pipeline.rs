@@ -3,16 +3,9 @@ use core::panic;
 use std::collections::HashMap;
 use std::io::{self, BufRead};
 
-use super::utils::{
-    build_neighbor_graph,
-    get_ability_map,
-    get_best_neighbor,
-    get_best_pearl_to_nom,
-    get_worker_pearl_counts,
-    make_nom,
-    make_pass};
+use super::utils::{build_neighbor_graph, get_ability_map, get_best_neighbor, get_best_pearl_to_nom, get_worker_pearl_counts, make_nom, make_pass};
 use crate::models;
-use crate::models::action::{ActionType, Nom, Pass};
+use crate::models::action::ActionType;
 use crate::models::state::NeighborGraph;
 use models::ability_map::AbilityMap;
 use models::state::State;
@@ -33,7 +26,6 @@ pub fn run_pearl_processing() {
     let ability_map: AbilityMap = get_ability_map();
     let mut pearl_paths: HashMap<u32, Vec<u32>> = HashMap::new();
 
-
     // Variables to handle looping over inputs from stdin until hitting the end
     let stdin = io::stdin();
     let mut handle = stdin.lock();
@@ -52,11 +44,8 @@ pub fn run_pearl_processing() {
                 let neighbor_graph = build_neighbor_graph(&data.neighbor_map, &data.workers);
 
                 let actions = determine_actions(&data, &ability_map, &neighbor_graph, &mut pearl_paths);
-                // let actions: HashMap<u32, ActionType> = HashMap::new();
+
                 print_action(actions);
-                // let x = "{}";
-                // println!("{}", x);
-                
                 line.clear();
             }
             Err(e) => {
@@ -88,48 +77,72 @@ fn determine_actions(
     neighbor_graph: &NeighborGraph,
     pearl_paths: &mut HashMap<u32, Vec<u32>>
 ) -> HashMap<u32, ActionType> {
-    let mut pearl_counts = get_worker_pearl_counts(&state.workers);
+    let current_pearl_counts = get_worker_pearl_counts(&state.workers);
+    let mut next_pearl_counts = get_worker_pearl_counts(&state.workers);
     let mut actions: HashMap<u32, ActionType> = HashMap::new();
 
-    for wrkr in &state.workers {
-        if pearl_counts[&wrkr.id] != 0 {
-            // First, check for finished pearls to pass back
-            // Don't do this for the gate keeper, finished pearls stay there
-            if wrkr.id != 0 {
-                for prl in &wrkr.desk {
-                    let already_found = false;
-                    if prl.layers.len() == 0 && !already_found{
-                        // Send the pearl back the way it came
-                        let mut old_path = pearl_paths.get(&wrkr.id).unwrap().clone();
-                        let next_wrkr = old_path.pop().unwrap();
-                        pearl_paths.insert(wrkr.id, old_path);
+    let mut workers_with_pearls = state.workers.clone();
+    workers_with_pearls.retain(|w| current_pearl_counts[&w.id] != 0);
 
-                        actions.insert(
-                            wrkr.id,
-                            make_pass(wrkr.id, prl.id, next_wrkr)
-                        );
+    for wrkr in workers_with_pearls {
+        // First, check for finished pearls to pass back
+        // Don't do this for the gate keeper, finished pearls stay there
+        let mut already_passed = false;
+        
+        if wrkr.id != 0 {
+            for prl in &wrkr.desk {
+                if prl.layers.len() == 0 && !already_passed{
+                    // Send the pearl back the way it came
+                    let old_path = pearl_paths.get_mut(&prl.id);
+                    let next_worker;
+
+                    match old_path {
+                        Some(pth) => {
+                            next_worker = pth.pop().unwrap();
+                        }
+                        None => {
+                            panic!("PEarl Path Error: Could not retrieve pearl's path back to the gate keeper.");
+                        }
                     }
+
+                    actions.insert(
+                        wrkr.id,
+                        make_pass(wrkr.id, prl.id, next_worker)
+                    );
+                    already_passed = true;
                 }
-            } else if pearl_counts[&wrkr.id] > 1 {
-                // Second, check for adjacent workers that need pearls            
-                // Determine which pearl to pass to which neighbor
-                let best_nbr = get_best_neighbor(state, wrkr, &pearl_counts, ability_map, neighbor_graph);
+            }
+        }
+        
+        // Second, if the worker hasn't already decided to pass a pearl back 
+        // towards the gate keeper, check for any other pearls that should be
+        // passed so a neighboring worker. If it is determined that no pearls
+        // should be passed, select the best pearl to nom.
+        if !already_passed{
+            let best_nbr = get_best_neighbor(
+                state, &wrkr, &next_pearl_counts, ability_map, neighbor_graph
+            );
 
-                actions.insert(
-                    wrkr.id,
-                    make_pass(wrkr.id, best_nbr.pearl_id, best_nbr.worker_id)
-                );
+            match best_nbr {
+                Some(bn) => {
+                    actions.insert(
+                        wrkr.id,
+                        make_pass(wrkr.id, bn.pearl_id, bn.worker_id)
+                    );
 
-                // Make sure to update the pearl counts, so the other workers
-                // know that this worker is about to receive a pearl
-                pearl_counts.insert(wrkr.id, pearl_counts[&wrkr.id] - 1);
-                pearl_counts.insert(best_nbr.worker_id, pearl_counts[&best_nbr.worker_id] + 1);
-            } else {
-                // Finally, if not going to pass, determine which pearl to nom
-                actions.insert(
-                    wrkr.id,
-                    make_nom(wrkr.id, get_best_pearl_to_nom(&wrkr, ability_map))
-                );
+                    // Update the pearl counts and paths, so the other workers
+                    // know that this worker is about to receive a pearl
+                    pearl_paths.entry(bn.pearl_id).or_insert(Vec::new()).push(wrkr.id);
+
+                    next_pearl_counts.insert(wrkr.id, next_pearl_counts[&wrkr.id] - 1);
+                    next_pearl_counts.insert(bn.worker_id, next_pearl_counts[&bn.worker_id] + 1);
+                },
+                None => {
+                    actions.insert(
+                        wrkr.id,
+                        make_nom(wrkr.id, get_best_pearl_to_nom(&wrkr, ability_map))
+                    );
+                }
             }
         }
     }

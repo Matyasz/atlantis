@@ -37,10 +37,16 @@ pub fn get_ability_map() -> AbilityMap {
     return map;
 }
 
+/// Takes a vector of Worker objects and returns a vector of just the IDs
 ///
+/// # Arguments
 ///
+/// * `Workers` - A reference to a Workers object.
 ///
+/// # Returns
 ///
+/// * `Vec<u32>` - A list of the IDs of the workers in the Workers input,
+///                sorted by ID.
 fn get_worker_ids(workers: &Workers) -> Vec<u32> {
     let mut worker_ids: Vec<u32> = Vec::new();
 
@@ -53,15 +59,25 @@ fn get_worker_ids(workers: &Workers) -> Vec<u32> {
     return worker_ids;
 }
 
-/// This method creates a HashMap where the keys are teh worker nautiloid IDs
+/// This method creates a HashMap where the keys are the worker nautiloid IDs
 /// and the values are the current number of pearls on that worker's desk.
 ///
-/// This method could be rewritten to use a vector instead, however that would
+/// (This method could be rewritten to use a vector instead, however that would
 /// either assume that the worker IDs all come in sequential order, starting
 /// at 0 and incrementing without skipping any natural numbers, or it would
-/// have to use unnecessary space to accommodate unused IDs. For the sake of
-/// robustness and minimizing space, a HashMap is used. We don't want our code
-/// failing when a nautiloid quits mid shift...
+/// have to be written to use unnecessary space to accommodate unused IDs.
+/// For the sake of robustness and minimizing space, a HashMap is used. We
+/// don't want our code failing when a nautiloid quits mid shift...)
+///
+/// # Arguments
+///
+/// * `Workers` - A reference to a Workers object.
+///
+/// # Returns
+///
+/// * `HashMap<u32, u32>` - A HashMap where the keys are worker IDs and
+///                         the values are the number of pearls on that
+///                         worker's desk
 pub fn get_worker_pearl_counts(workers: &Workers) -> HashMap<u32, u32> {
     let mut counts: HashMap<u32, u32> = HashMap::new();
 
@@ -81,16 +97,10 @@ pub fn get_worker_pearl_counts(workers: &Workers) -> HashMap<u32, u32> {
 /// having to iterate over the entire neighbor map each time we want to
 /// find adjacent nautiloids.
 ///
-/// Runtime here is O(w * n), where w is the number of workers, and n is the
-/// number of neighbor pairings, which could be quite large is teh nautiloids
-/// are all able to reach one another. In that worse case scenerio, the runtime
-/// becomes O(w * w!) which is a real nightmare. This whole strategy would be
-/// more efficient as some sort of graph method.
-///
 /// # Arguments
 ///
 /// * `neighbors` - This is the NeighborMap that is read directly from the
-///               raw JSON file
+///                 raw JSON file
 ///
 /// # Returns
 ///
@@ -174,11 +184,11 @@ pub fn get_best_neighbor(
     pearl_counts: &HashMap<u32, u32>,
     ability_map: &AbilityMap,
     neighbor_graph: &NeighborGraph
-) -> WorkerPearlIDs {
+) -> Option<WorkerPearlIDs> {
     let empty_neighbors = get_empty_neighbors(worker, pearl_counts, neighbor_graph);
 
     let best_time = u32::MAX;
-    let mut best_pair = WorkerPearlIDs{worker_id: 0, pearl_id: 0};
+    let mut best_pair: Option<WorkerPearlIDs> = None;
 
     for e_nbr_id in &empty_neighbors {
         for p in &worker.desk {
@@ -188,8 +198,7 @@ pub fn get_best_neighbor(
             let time = get_time_to_process(p, &nbr[0], ability_map);
 
             if time < best_time {
-                best_pair.worker_id = *e_nbr_id;
-                best_pair.pearl_id = p.id;
+                best_pair = Some(WorkerPearlIDs{worker_id: *e_nbr_id, pearl_id: p.id});
             }
         }
     }
