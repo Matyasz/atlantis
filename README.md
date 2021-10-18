@@ -20,13 +20,16 @@ cargo build --release
 ```
 This will take about 30 seconds on an average laptop (8th gen Intel CORE i5 running Manjaro Linux). You can omit the `--release` flag to speed up compile time, but this will significantly slow down runtime.
 
-From this same directory, you can run the tests with 
+This will produce a binary, which will be located at `<repo root dir>/target/release/atlantis` (replace `release` with `debug` if you omitted the `--release flag` earlier) which can accept inputs from `stdin` and will output instructions to `stdout`.
+
+## Tests
+From the same directory the build command was run from, you can run the tests with 
 
 ```bash
 cargo test
 ```
 
-This will produce a binary, which will be located at `<repo root dir>/target/release/atlantis` (replace `release` with `debug` if you omitted the `--release flag` earlier) which can accept inputs from `stdin` and will output instructions to `stdout`.
+*Tests for a given module are located within a submodule of the module being tested.*
 
 ## Optimization Strategy
 
