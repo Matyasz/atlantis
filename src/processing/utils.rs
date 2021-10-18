@@ -247,18 +247,20 @@ pub fn get_best_neighbor(
     neighbor_graph: &NeighborGraph
 ) -> Option<WorkerPearlIDs> {
     let empty_neighbors = get_empty_neighbors(worker, pearl_counts, neighbor_graph);
-
-    let best_time = u32::MAX;
     let mut best_pair: Option<WorkerPearlIDs> = None;
 
     for e_nbr_id in &empty_neighbors {
         for p in &worker.desk {
+            let best_time = get_time_to_process(p, worker, ability_map);
+            
             let mut nbr = state.workers.clone();
             nbr.retain(|w| &w.id == e_nbr_id);
 
             let time = get_time_to_process(p, &nbr[0], ability_map);
 
-            if time < best_time {
+            // Only pass to a neighbor if they can actually process it better, OR if
+            // the worker has extra pearls to work on.
+            if (time < best_time) || (time == best_time && worker.desk.len() > 1) {
                 best_pair = Some(WorkerPearlIDs{worker_id: *e_nbr_id, pearl_id: p.id});
             }
         }
