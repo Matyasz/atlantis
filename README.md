@@ -19,6 +19,12 @@ cd atlantis
 cargo build
 ```
 
+From this same directory, you can run the tests with 
+
+```bash
+cargo test
+```
+
 This will produce a binary, which will be located at `<repo root dir>/target/debug/atlantis` which can accept inputs from `stdin` and will output instructions to `stdout`.
 
 ## Optimization Strategy
@@ -63,6 +69,7 @@ This code comes with a few assumptions about the input data, documented here.
 
 The code has a handful of areas that could be improved, documented here.
 
+- In a production setting far more examination of the input data would be done,here most of the input is assumed to be valid.
 - The `get_neighbor_map` could be significantly more efficient.
 - `unwrap` is likely used too often. Better error handling by using more idiomatic Rust for many of these instances could have been implemented.
 - A number of methods in `pearl_pipeline` could be broken out and made into more, smaller, more testable functions.

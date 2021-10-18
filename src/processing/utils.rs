@@ -47,7 +47,7 @@ pub fn get_ability_map() -> AbilityMap {
 ///
 /// * `Vec<u32>` - A list of the IDs of the workers in the Workers input,
 ///                sorted by ID.
-fn get_worker_ids(workers: &Workers) -> Vec<u32> {
+pub fn get_worker_ids(workers: &Workers) -> Vec<u32> {
     let mut worker_ids: Vec<u32> = Vec::new();
 
     for w in workers {
@@ -115,17 +115,26 @@ pub fn build_neighbor_graph(neighbors: &NeighborMap, workers: &Workers) -> Neigh
     let mut neighbor_map: HashMap<u32, Vec<u32>> = HashMap::new();
     let worker_ids = get_worker_ids(workers);
 
-    for id in worker_ids {
+    for id in &worker_ids {
         let mut nb_list: Vec<u32> = Vec::new();
 
         for pair in neighbors {
-            if id == pair[0] {
+            // check to make sure the 
+            for ind in [0, 1] {
+                if !worker_ids.contains(&pair[ind]) {
+                    panic!(
+                        "Neighbor Graph Error: {} is not a valid worker ID", &pair[ind]
+                    );
+                }
+            }
+
+            if id == &pair[0] {
                 nb_list.push(pair[1]);
-            } else if id == pair[1] {
+            } else if id == &pair[1] {
                 nb_list.push(pair[0]);
             }
         }
-        neighbor_map.insert(id, nb_list);
+        neighbor_map.insert(*id, nb_list);
     }
 
     return neighbor_map;
@@ -210,7 +219,7 @@ pub fn get_time_to_process(pearl: &Pearl, worker: &Worker, ability_map: &Ability
 /// # Returns
 ///
 /// * `Vec<u32>` - A vector of the IDs of which neighbors have an empty desk 
-fn get_empty_neighbors(
+pub fn get_empty_neighbors(
     worker: &Worker,
     pearl_counts: &HashMap<u32, u32>,
     neighbor_graph: &NeighborGraph
