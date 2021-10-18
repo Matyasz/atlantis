@@ -291,14 +291,27 @@ pub fn get_best_neighbor(
 /// * `u32` - The ID of the optimal pearl for the worker to nom
 ///
 pub fn get_best_pearl_to_nom(worker: &Worker, ability_map: &AbilityMap) -> u32 {
-    let best_time = u32::MAX;
-    let mut best_pearl_id = worker.desk[0].id;
+    // Remove any finished pearls first
+    let mut unfinished_pearls = worker.desk.clone();
+    unfinished_pearls.retain(|p| p.layers.len() != 0);
 
-    for pearl in &worker.desk {
+    let mut best_time: Option<u32> = None;
+    let mut best_pearl_id = unfinished_pearls[0].id;
+
+    for pearl in &unfinished_pearls {
         let time = get_time_to_process(pearl, worker, ability_map);
 
-        if time < best_time {
-            best_pearl_id = pearl.id;
+        match best_time {
+            Some(bt) => {
+                if time < bt {
+                    best_pearl_id = pearl.id;
+                    best_time = Some(bt);
+                }
+            }
+            None => {
+                best_pearl_id = pearl.id;
+                best_time = Some(time);
+            }
         }
     }
 

@@ -72,6 +72,7 @@ The code has a handful of areas that could be improved, documented here.
 - In a production setting far more examination of the input data would be done,here most of the input is assumed to be valid.
 - The `get_neighbor_map` could be significantly more efficient.
 - `unwrap` is likely used too often. Better error handling by using more idiomatic Rust for many of these instances could have been implemented.
+- More methods should return an `Option` type, again leading to more idiomatic Rust code.
 - A number of methods in `pearl_pipeline` could be broken out and made into more, smaller, more testable functions.
 - More rules could be added to the optimization of the pearl processing pipeline. Some that come to mind are:
     1. When passing, find the shortest path to a nautiloid that can process one of their pearls the fastest.

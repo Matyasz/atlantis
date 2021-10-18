@@ -1,5 +1,6 @@
 use crate::models::action::ActionType;
 use crate::models::state::{Layer, NeighborMap, Pearl, Worker, Workers};
+use crate::processing::utils::get_best_pearl_to_nom;
 use super::super::utils::{build_neighbor_graph, get_empty_neighbors, get_time_to_process, get_worker_ids, get_worker_pearl_counts, make_nom, make_pass};
 use crate::{models::ability_map::AbilityMap, processing::utils::get_ability_map};
 
@@ -128,4 +129,12 @@ fn test_get_empty_neighbors() {
 
     let en1 = get_empty_neighbors(&basic_workers()[1], &pc, &ng);
     assert_eq!(en1, vec![0]);
+}
+
+#[test]
+fn test_get_best_pearl_to_nom() {
+    let map = get_ability_map();
+
+    let bp = get_best_pearl_to_nom(&basic_workers()[1], &map);
+    assert_eq!(bp, 12345);
 }
