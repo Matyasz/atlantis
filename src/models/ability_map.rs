@@ -40,14 +40,3 @@ impl Index<&'_ str> for Color {
         }
     }
 }
-
-// impl IndexMut<&'_ str> for AbilityMap {
-//     fn index_mut(&mut self, s: &str) -> &mut Color {
-//         match s {
-//             "General" => &mut self.General,
-//             "Vector" => &mut self.Vector,
-//             "Matrix" => &mut self.Matrix,
-//             _ => panic!("Type AbilityMap does not have field {}", s),
-//         }
-//     }
-// }
