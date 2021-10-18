@@ -15,16 +15,3 @@ pub enum ActionType {
     Pass(Pass),
     Nom(Nom)
 }
-
-
-// {
-//     "1": {
-//         "Pass": {
-//             "pearl_id":52,
-//             "to_worker":0
-//         }
-//     },
-//     "0": {
-//         "Nom":1234
-//     }
-// }

@@ -97,6 +97,10 @@ pub fn get_worker_pearl_counts(workers: &Workers) -> HashMap<u32, u32> {
 /// having to iterate over the entire neighbor map each time we want to
 /// find adjacent nautiloids.
 ///
+/// Using a method like this, the code becomes much more general and allows
+/// the future option of having different flavors of worker and colors of
+/// pearl, simply by updating a single JSON file.
+///
 /// # Arguments
 ///
 /// * `neighbors` - This is the NeighborMap that is read directly from the
@@ -127,7 +131,18 @@ pub fn build_neighbor_graph(neighbors: &NeighborMap, workers: &Workers) -> Neigh
     return neighbor_map;
 }
 
+/// Takes information about a worker passing a pearl to another worker
+/// and constructs an ActionType object of the Pass variant.
 ///
+/// # Arguments
+///
+/// * `from_id` - The ID of the worker passing the pearl
+/// * `pearl_id` - The ID of the pearl being passed
+/// * `to_id` - The ID of the worker receiving the pearl
+///
+/// # Returns
+///
+/// * `ActionType::Pass` - Ano object describing the passing of a pearl
 pub fn make_pass(from_id: u32, pearl_id: u32, to_id: u32) -> ActionType {
     return ActionType::Pass(
         Pass{
@@ -137,8 +152,17 @@ pub fn make_pass(from_id: u32, pearl_id: u32, to_id: u32) -> ActionType {
         }
     );
 }
-
+/// Takes information about a worker nomming a pearl and constructs an
+/// ActionType object of the Nom variant.
 ///
+/// # Arguments
+///
+/// * `nautiloid_id` - The worker nomming a pearl
+/// * `pearl_id` - The pearl being nommed
+///
+/// # Returns
+///
+/// * `ActionType::Nom` - Ano object describing the nomming of a pearl
 pub fn make_nom(nautiloid_id: u32, pearl_id: u32) -> ActionType {
     return ActionType::Nom(
         Nom{
@@ -150,6 +174,17 @@ pub fn make_nom(nautiloid_id: u32, pearl_id: u32) -> ActionType {
 
 /// Determines how long it will take a given nautiloid to process a given pearl,
 /// based on the information in a given ability map.
+///
+/// # Arguments
+///
+/// * `pearl` - A reference to the pearl in question
+/// * `worker` - A reference to the worker in question
+/// * `ability_map` - A reference to the ability map describing how different
+///                   flavors of worker can process different colors of pearls
+///
+/// # Returns
+///
+/// * `u32` - How long it would take that worker to process the pearl
 pub fn get_time_to_process(pearl: &Pearl, worker: &Worker, ability_map: &AbilityMap) -> u32 {
     let mut total_time: u32 = 0;
 
@@ -164,7 +199,17 @@ pub fn get_time_to_process(pearl: &Pearl, worker: &Worker, ability_map: &Ability
     return total_time;
 }
 
-/// Given a worker, finds which of its neighbors have an empty desk.
+/// Given a worker, finds which of its neighbors have an empty desk
+///
+/// # Arguments
+///
+/// * `worker` - A reference to the worker in question
+/// * `pearl_counts` - The number of pearls each worker has
+/// * `neighbor_graph` - A HashMap detailing the neighbors of each worker
+///
+/// # Returns
+///
+/// * `Vec<u32>` - A vector of the IDs of which neighbors have an empty desk 
 fn get_empty_neighbors(
     worker: &Worker,
     pearl_counts: &HashMap<u32, u32>,
@@ -176,8 +221,24 @@ fn get_empty_neighbors(
     return empty_nbrs;
 }
 
-// Given the state, and a particular worker, determine the best option
-// for passing a pearl to a neighbor.
+/// Given the state, and a particular worker, determine the best option
+/// for passing a pearl to a neighbor.
+///
+/// # Arguments
+///
+/// * `state` - A reference to the state of the pipeline
+/// * `worker` - A reference to the worker deciding who to pass to
+/// * `pearl_counts` - A reference to the pearl counts of the workers
+/// * `ability_map` - A reference to the ability map describing how different
+///                   flavors of worker can process different colors of pearls
+/// * `neighbor_graph` - A HashMap detailing the neighbors of each worker
+///
+/// # Returns
+///
+/// * `Option<WorkerPearlIDs>` - An option, returning Some means that there is
+///                              a good neighbor to pass a pearl to. Returning
+///                              None means that there isn't, and the worker
+///                              should nom a pearl instead.
 pub fn get_best_neighbor(
     state: &State,
     worker: &Worker,
@@ -206,7 +267,17 @@ pub fn get_best_neighbor(
     return best_pair;
 }
 
+/// Given a worker and their abilities, determines the best pearl to nom.
 ///
+/// # Arguments
+///
+/// * `worker` - A reference to the worker deciding which pearl to nom
+/// * `ability_map` - A reference to the ability map describing how different
+///                   flavors of worker can process different colors of pearls
+///
+/// # Returns
+///
+/// * `u32` - The ID of the optimal pearl for the worker to nom
 ///
 pub fn get_best_pearl_to_nom(worker: &Worker, ability_map: &AbilityMap) -> u32 {
     let best_time = u32::MAX;

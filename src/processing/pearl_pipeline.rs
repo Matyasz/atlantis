@@ -10,10 +10,10 @@ use crate::models::state::NeighborGraph;
 use models::ability_map::AbilityMap;
 use models::state::State;
 
-/// Runs the main loop for the pearl processing pipeline, which
-/// consists of repeatedly reading lines form `stdin`, converting
-/// that JSON-like string into our custom State type, and then
-/// passing that to the worker method `determine_action`.
+/// Runs the main loop for the pearl processing pipeline, which consists of
+/// repeatedly reading lines form `stdin`, converting that JSON-like string
+/// into our custom State type, and then passing that to the worker method
+/// `determine_action`
 ///
 /// # Arguments
 ///
@@ -56,21 +56,32 @@ pub fn run_pearl_processing() {
 }
 
 /// The main worker method for processing the state of the pearl processing
-/// pipeline. This will take in the state information and determine the
-/// actions the nautiloids should take.
+/// pipeline. This will take in the state information, as well as some other
+/// information that will remain constant for the duration of the pipeline
+/// running (the ability map, the neighbor graph) and determine the
+/// action each nautiloid should take.
+///
+/// If a worker does not currently have a pearl, then they will not be
+/// assigned an action to take.
 ///
 /// # Arguments
 ///
-/// * `state` - This is a State variable that represents the current
+/// * `state` - This is a reference to a State that describes the current
 ///             state of the pearl processing pipeline
 ///
-/// * `ability_map` - A borrowed reference to an AbilityMap that will describe
-///                   how quickly each flavor of nautiloid can process each color
-///                   of pearl
+/// * `ability_map` - A reference to an AbilityMap that will describe how 
+///                   quickly each flavor of nautiloid can process each
+///                   color of pearl
+/// * `neighbor_graph` - A HashMap detailing the neighbors of each worker
+/// * `pearl_paths` - A HashMap detailing how each pearl has been passed
+///                   around by the nautiloids
 ///
 /// # Returns
 ///
-/// * ()
+/// * `HashMap<u32, ActionType>` - A HashMap where teh keys are the IDs of
+///                                the workers, and the keys are ActionType
+///                                objects describing what action the worker
+///                                should take
 fn determine_actions(
     state: &State,
     ability_map: &AbilityMap,
@@ -152,6 +163,15 @@ fn determine_actions(
 
 /// Takes the set of actions and constructs a JSON-like string to be
 /// printed to `sdtout`.
+///
+/// # Arguments
+///
+/// * `actions` - The HashMAp containing the actions of all the workers that
+///               will make an action this turn.
+///
+/// # Returns
+///
+/// * ()
 fn print_action(actions: HashMap<u32, ActionType>) -> () {
     let mut action_str = "{".to_string();
 
