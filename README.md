@@ -54,8 +54,9 @@ Using this method, the score from an `average-run` seems to hover between 9.5 an
 Thanks to the magic of Rust, you can also build a complete set of documentation as a website (complete with hyperlinks and including the documentation of all dependencies) by running
 
 ```bash
-cargo doc --open
+cargo doc --release --open
 ```
+(again, `--release` can be omitted)
 
 When it is finished generating, it will automatically open in your browser. Later, you can navigate to `<repo root dir>/target/doc/atlantis` where you will find an `index.html` containing the landing page for the documentation.
 
@@ -71,6 +72,7 @@ This code comes with a few assumptions about the input data, documented here.
 
 The code has a handful of areas that could be improved, documented here.
 
+- I would have liked to refactor `run_pearl_processing` to accept input/output streams so that I could write end-to-end tests of the whole pipeline by having `main` pass mutable references to `std::io::stdin()` and `std::io::stdout()`, and in the tests just pass a `File` and a `Vec`. Unfortunately I couldn't get this refactor working in time, so I abandoned it.
 - In a production setting far more examination of the input data would be done,here most of the input is assumed to be valid.
 - The `get_neighbor_map` could be significantly more efficient.
 - `unwrap` is likely used too often. Better error handling by using more idiomatic Rust for many of these instances could have been implemented.

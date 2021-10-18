@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+
 use super::super::utils::{
     build_neighbor_graph, get_empty_neighbors, get_time_to_process, get_worker_ids,
     get_worker_pearl_counts, make_nom, make_pass,
 };
 use crate::models::action::ActionType;
 use crate::models::state::{Layer, NeighborMap, Pearl, Worker, Workers};
-use crate::processing::utils::get_best_pearl_to_nom;
+use crate::processing::utils::{get_action_string, get_best_pearl_to_nom};
 use crate::{models::ability_map::AbilityMap, processing::utils::get_ability_map};
 
 /// Returns a simple Pearl object for use in testing
@@ -42,6 +44,14 @@ fn basic_workers() -> Workers {
     ];
 
     return w;
+}
+
+fn basic_actions() -> HashMap<u32, ActionType> {
+    let mut acts: HashMap<u32, ActionType> = HashMap::new();
+
+    acts.insert(1, make_nom(1, 12345));
+
+    return acts;
 }
 
 #[test]
@@ -146,4 +156,19 @@ fn test_get_best_pearl_to_nom() {
 
     let bp = get_best_pearl_to_nom(&basic_workers()[1], &map);
     assert_eq!(bp, Some(12345));
+}
+
+#[test]
+fn test_get_action_string_empty() {
+    let acts: HashMap<u32, ActionType> = HashMap::new();
+
+    let astr = get_action_string(acts);
+    assert_eq!(astr, "{}");
+}
+
+#[test]
+fn test_get_action_string_basic() {
+    let astr = get_action_string(basic_actions());
+
+    assert_eq!(astr, "{\"1\":{\"Nom\":12345}}");
 }

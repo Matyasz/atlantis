@@ -1,2 +1,2 @@
-mod test_pearl_pipeline;
+mod test_pearl_processing;
 mod test_utils;

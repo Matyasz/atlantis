@@ -317,3 +317,159 @@ pub fn get_best_pearl_to_nom(worker: &Worker, ability_map: &AbilityMap) -> Optio
 
     return best_pearl_id;
 }
+
+/// The main worker method for processing the state of the pearl processing
+/// pipeline. This will take in the state information, as well as some other
+/// information that will remain constant for the duration of the pipeline
+/// running (the ability map, the neighbor graph) and determine the
+/// action each nautiloid should take.
+///
+/// If a worker does not currently have a pearl, then they will not be
+/// assigned an action to take.
+///
+/// # Arguments
+///
+/// * `state` - This is a reference to a State that describes the current
+///             state of the pearl processing pipeline
+///
+/// * `ability_map` - A reference to an AbilityMap that will describe how
+///                   quickly each flavor of nautiloid can process each
+///                   color of pearl
+/// * `neighbor_graph` - A HashMap detailing the neighbors of each worker
+/// * `pearl_paths` - A HashMap detailing how each pearl has been passed
+///                   around by the nautiloids
+///
+/// # Returns
+///
+/// * `HashMap<u32, ActionType>` - A HashMap where teh keys are the IDs of
+///                                the workers, and the keys are ActionType
+///                                objects describing what action the worker
+///                                should take
+pub fn determine_actions(
+    state: &State,
+    ability_map: &AbilityMap,
+    neighbor_graph: &NeighborGraph,
+    pearl_paths: &mut HashMap<u32, Vec<u32>>,
+) -> HashMap<u32, ActionType> {
+    let current_pearl_counts = get_worker_pearl_counts(&state.workers);
+    let mut next_pearl_counts = get_worker_pearl_counts(&state.workers);
+    let mut actions: HashMap<u32, ActionType> = HashMap::new();
+
+    let mut workers_with_pearls = state.workers.clone();
+    workers_with_pearls.retain(|w| current_pearl_counts[&w.id] != 0);
+
+    for wrkr in workers_with_pearls {
+        // First, check for finished pearls to pass back
+        // Don't do this for the gate keeper, finished pearls stay there
+        let mut already_passed = false;
+
+        if wrkr.id != 0 {
+            for prl in &wrkr.desk {
+                if prl.layers.len() == 0 && !already_passed {
+                    // Send the pearl back the way it came
+                    let old_path = pearl_paths.get_mut(&prl.id);
+                    let next_worker;
+
+                    match old_path {
+                        Some(pth) => {
+                            next_worker = pth.pop().unwrap();
+                        }
+                        None => {
+                            panic!("PEarl Path Error: Could not retrieve pearl's path back to the gate keeper.");
+                        }
+                    }
+
+                    actions.insert(wrkr.id, make_pass(wrkr.id, prl.id, next_worker));
+                    already_passed = true;
+                }
+            }
+        }
+
+        // Second, if the worker hasn't already decided to pass a pearl back
+        // towards the gate keeper, check for any other pearls that should be
+        // passed so a neighboring worker. If it is determined that no pearls
+        // should be passed, select the best pearl to nom.
+        if !already_passed {
+            let best_nbr = get_best_neighbor(
+                state,
+                &wrkr,
+                &next_pearl_counts,
+                ability_map,
+                neighbor_graph,
+            );
+
+            match best_nbr {
+                Some(bn) => {
+                    actions.insert(wrkr.id, make_pass(wrkr.id, bn.pearl_id, bn.worker_id));
+
+                    // Update the pearl counts and paths, so the other workers
+                    // know that this worker is about to receive a pearl
+                    pearl_paths
+                        .entry(bn.pearl_id)
+                        .or_insert(Vec::new())
+                        .push(wrkr.id);
+
+                    next_pearl_counts.insert(wrkr.id, next_pearl_counts[&wrkr.id] - 1);
+                    next_pearl_counts.insert(bn.worker_id, next_pearl_counts[&bn.worker_id] + 1);
+                }
+                None => {
+                    let best_pearl = get_best_pearl_to_nom(&wrkr, ability_map);
+                    match best_pearl {
+                        Some(bp) => {
+                            actions.insert(wrkr.id, make_nom(wrkr.id, bp));
+                        }
+                        None => {
+                            panic!("Nom Error: Could not find a best pearl to Nom");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return actions;
+}
+
+/// Takes the set of actions and constructs a JSON-like string to be
+/// printed to `sdtout`.
+///
+/// # Arguments
+///
+/// * `actions` - The HashMAp containing the actions of all the workers that
+///               will make an action this turn.
+///
+/// # Returns
+///
+/// * `String` - The items in `actions` encoded into a JSON-like String.
+pub fn get_action_string(actions: HashMap<u32, ActionType>) -> String {
+    let mut action_str = "{".to_string();
+
+    for id in actions.keys() {
+        let act =
+            match &actions[id] {
+                ActionType::Pass(n) => {
+                    format!(
+                    "\"{id}\":{{\"Pass\":{{\"pearl_id\":{pearl_id},\"to_worker\":{to_worker}}}}}",
+                    id=id, pearl_id=n.pearl_id, to_worker=n.to_id
+                )
+                }
+                ActionType::Nom(n) => {
+                    format!(
+                        "\"{id}\":{{\"Nom\":{pearl_id}}}",
+                        id = id,
+                        pearl_id = n.pearl_id
+                    )
+                }
+            };
+
+        action_str += &act;
+        action_str += ",";
+    }
+
+    if !actions.is_empty() {
+        action_str.pop();
+    } // remove the extra comma if there were actions to add
+    action_str += "}";
+
+    return action_str;
+}
